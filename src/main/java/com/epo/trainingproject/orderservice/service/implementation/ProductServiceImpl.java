@@ -10,6 +10,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -26,7 +27,7 @@ public class ProductServiceImpl implements ProductService {
     public int checkAvailability(int productId) {
         return productRepository.findById(productId)
                 .map(Product::getQuantity)
-                .orElseThrow(() -> new IllegalArgumentException("No product found"));
+                .orElseThrow(() -> new NoSuchElementException("No product found"));
     }
 
     @Override
@@ -40,7 +41,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductModel addStock(int id, int quantity) {
         Optional<Product> productOptional = productRepository.findById(id);
         Product product = productOptional
-                .orElseThrow(() -> new IllegalArgumentException("Non existing product"));
+                .orElseThrow(() -> new NoSuchElementException("Non existing product"));
 
         Product updatedProduct = productRepository.save(
                 Product.builder()
@@ -59,7 +60,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductModel decreaseStock(int id, int quantity) {
         Optional<Product> productOptional = productRepository.findById(id);
         Product product = productOptional
-                .orElseThrow(() -> new IllegalArgumentException("Non existing product"));
+                .orElseThrow(() -> new NoSuchElementException("Non existing product"));
 
         Product updatedProduct = productRepository.save(
                 Product.builder()
