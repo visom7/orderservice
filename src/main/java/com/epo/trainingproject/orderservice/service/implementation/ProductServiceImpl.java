@@ -23,13 +23,14 @@ public class ProductServiceImpl implements ProductService {
     private ProductConverter converter;
 
     @Override
-    public boolean checkAvailability(ProductModel productModel) {
-
-        return false;
+    public int checkAvailability(int productId) {
+        return productRepository.findById(productId)
+                .map(Product::getQuantity)
+                .orElseThrow(() -> new IllegalArgumentException("No product found"));
     }
 
     @Override
-    public ProductModel addProduct(ProductModel productModel) {
+    public ProductModel registerProduct(ProductModel productModel) {
         Product productInserted = productRepository.save(converter.convertToEntity(productModel));
         LOGGER.info("Product: " + productInserted.getName() + ", added succesfully!");
         return converter.convertToModel(productInserted);
@@ -48,6 +49,25 @@ public class ProductServiceImpl implements ProductService {
                         .description(product.getDescription())
                         .price(product.getPrice())
                         .quantity(product.getQuantity() + quantity)
+                        .build());
+
+        LOGGER.info("Product: " + updatedProduct.getName() + ", updated succesfully!");
+        return converter.convertToModel(updatedProduct);
+    }
+
+    @Override
+    public ProductModel decreaseStock(int id, int quantity) {
+        Optional<Product> productOptional = productRepository.findById(id);
+        Product product = productOptional
+                .orElseThrow(() -> new IllegalArgumentException("Non existing product"));
+
+        Product updatedProduct = productRepository.save(
+                Product.builder()
+                        .id(id)
+                        .name(product.getName())
+                        .description(product.getDescription())
+                        .price(product.getPrice())
+                        .quantity(product.getQuantity() - quantity)
                         .build());
 
         LOGGER.info("Product: " + updatedProduct.getName() + ", updated succesfully!");
