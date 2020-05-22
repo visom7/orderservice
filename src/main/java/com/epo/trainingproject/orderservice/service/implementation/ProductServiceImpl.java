@@ -33,12 +33,14 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductModel registerProduct(ProductModel productModel) {
         Product productInserted = productRepository.save(converter.convertToEntity(productModel));
-        LOGGER.info("Product: " + productInserted.getName() + ", added succesfully!");
+        LOGGER.info("Product: " + productInserted.getName()
+                + "with ID: " + productInserted.getId()
+                + ", registered succesfully!");
         return converter.convertToModel(productInserted);
     }
 
     @Override
-    public ProductModel addStock(int id, int quantity) {
+    public ProductModel addStock(int id, int quantity) throws NoSuchElementException {
         Optional<Product> productOptional = productRepository.findById(id);
         Product product = productOptional
                 .orElseThrow(() -> new NoSuchElementException("Non existing product"));
@@ -52,7 +54,8 @@ public class ProductServiceImpl implements ProductService {
                         .quantity(product.getQuantity() + quantity)
                         .build());
 
-        LOGGER.info("Product: " + updatedProduct.getName() + ", updated succesfully!");
+        LOGGER.info("Product: " + updatedProduct.getName() + " correctly updated"
+                + " -> Actual stock is " + updatedProduct.getQuantity() + " units");
         return converter.convertToModel(updatedProduct);
     }
 
@@ -71,7 +74,8 @@ public class ProductServiceImpl implements ProductService {
                         .quantity(product.getQuantity() - quantity)
                         .build());
 
-        LOGGER.info("Product: " + updatedProduct.getName() + ", updated succesfully!");
+        LOGGER.info("Product: " + updatedProduct.getName() + " correctly updated"
+                + " -> Actual stock is " + updatedProduct.getQuantity() + " units");
         return converter.convertToModel(updatedProduct);
     }
 }

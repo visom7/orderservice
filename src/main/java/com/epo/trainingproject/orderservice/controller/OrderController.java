@@ -21,6 +21,9 @@ public class OrderController {
 
     @PostMapping("/create")
     public void createOrder(@RequestBody List<ProductOrderModel> productOrderModels) {
+        log.info("Order received! -> " + productOrderModels
+                .stream()
+                .map(s -> "ID: " + s.getProductId() + " - \n"));
         orderService.makeOrder(productOrderModels);
     }
 

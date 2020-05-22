@@ -25,9 +25,14 @@ public class OrderServiceImpl implements OrderService {
     public void makeOrder(List<ProductOrderModel> productOrderModels) {
         productOrderModels.forEach(productOrderModel -> {
             if (productService.checkAvailability(productOrderModel.getProductId()) < productOrderModel.getQuantity()) {
+                log.info("Not enough stock available for productId: " + productOrderModel.getProductId());
+                log.info("Calling provider for " + productOrderModel.getQuantity() + " units");
                 productService.addStock(productOrderModel.getProductId(), productOrderModel.getQuantity());
             }
-            httpPostProductOrderModelsTo("http://localhost:8091","shipping/ship", productOrderModels);
+        });
+        log.info("Enough stock available, sending order to shipping!");
+        httpPostProductOrderModelsTo("http://localhost:8091", "shipping/ship", productOrderModels);
+        productOrderModels.forEach(productOrderModel -> {
             productService.decreaseStock(productOrderModel.getProductId(), productOrderModel.getQuantity());
         });
     }
