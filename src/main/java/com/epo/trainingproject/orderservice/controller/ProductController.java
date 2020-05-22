@@ -7,6 +7,8 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.NoSuchElementException;
+
 @RestController
 @RequestMapping("/product")
 public class ProductController {
@@ -23,7 +25,15 @@ public class ProductController {
     }
     @PutMapping("/add-stock")
     public void registerProduct(@RequestParam int productId, @RequestParam int quantity) {
-        LOGGER.info("Add " + quantity + " units for product id: " + productId);
-        productService.addStock(productId, quantity);
+        if (quantity > 0) {
+            try {
+                LOGGER.info("Add " + quantity + " units for product id: " + productId);
+                productService.addStock(productId, quantity);
+            } catch (NoSuchElementException e) {
+                LOGGER.error("The product with ID " + productId + " does not exist");
+            }
+        } else {
+            LOGGER.error("Quantity should be a possitive value above zero");
+        }
     }
 }

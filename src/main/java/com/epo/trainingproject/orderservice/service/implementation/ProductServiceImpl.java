@@ -34,7 +34,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductModel registerProduct(ProductModel productModel) {
         Product productInserted = productRepository.save(converter.convertToEntity(productModel));
         LOGGER.info("Product: " + productInserted.getName()
-                + "with ID: " + productInserted.getId()
+                + " with ID: " + productInserted.getId()
                 + ", registered succesfully!");
         return converter.convertToModel(productInserted);
     }
