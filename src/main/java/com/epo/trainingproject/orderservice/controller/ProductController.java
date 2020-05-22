@@ -13,6 +13,7 @@ import java.util.NoSuchElementException;
 @RequestMapping("/product")
 public class ProductController {
 
+    //TODO change to lombok's one
     private static final Log LOGGER = LogFactory.getLog(ProductController.class);
 
     @Autowired
