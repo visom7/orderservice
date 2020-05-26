@@ -48,7 +48,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductModel registerProduct(ProductModel productModel) {
         Product product = productConverter.convertToEntity(productModel);
         product.setStock(Stock.builder().product(product).build());
-        Optional<ProductType> productType = productTypeRepository.findIdByType(product.getProductType().getType());
+        Optional<ProductType> productType = productTypeRepository.findByType(product.getProductType().getType());
         productType.ifPresent(product::setProductType);
         Product productInserted = productRepository.save(product);
         LOGGER.info("Product: " + productInserted.getName()
@@ -66,14 +66,5 @@ public class ProductServiceImpl implements ProductService {
         LOGGER.info("Product: " + updatedStock.getProduct().getName() + " correctly updated"
                 + " -> Actual stock is " + updatedStock.getAmount() + " units");
         return stockConverter.convertToModel(updatedStock);
-
-//        if (productRepository.findById(stockModel.getProductModel().getId()).isPresent()) {
-//            Stock updatedStock = stockRepository.save(stockConverter.convertToEntity(stockModel));
-//            LOGGER.info("Product: " + updatedStock.getProduct().getName() + " correctly updated"
-//                    + " -> Actual stock is " + updatedStock.getAmount() + " units");
-//            return stockConverter.convertToModel(updatedStock);
-//        } else {
-//            throw new OrderServiceException("Non existing productId: " + stockModel.getProductModel().getId(), new NoSuchElementException());
-//        }
     }
 }
