@@ -3,11 +3,13 @@ package com.epo.trainingproject.orderservice.service.implementation;
 import com.epo.trainingproject.orderservice.converter.ProductConverter;
 import com.epo.trainingproject.orderservice.converter.StockConverter;
 import com.epo.trainingproject.orderservice.entity.Product;
+import com.epo.trainingproject.orderservice.entity.ProductType;
 import com.epo.trainingproject.orderservice.entity.Stock;
 import com.epo.trainingproject.orderservice.exception.OrderServiceException;
 import com.epo.trainingproject.orderservice.model.ProductModel;
 import com.epo.trainingproject.orderservice.model.StockModel;
 import com.epo.trainingproject.orderservice.repository.ProductRepository;
+import com.epo.trainingproject.orderservice.repository.ProductTypeRepository;
 import com.epo.trainingproject.orderservice.repository.StockRepository;
 import com.epo.trainingproject.orderservice.service.ProductService;
 import org.apache.commons.logging.Log;
@@ -28,6 +30,8 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private StockRepository stockRepository;
     @Autowired
+    private ProductTypeRepository productTypeRepository;
+    @Autowired
     private ProductConverter productConverter;
     @Autowired
     private StockConverter stockConverter;
@@ -44,6 +48,8 @@ public class ProductServiceImpl implements ProductService {
     public ProductModel registerProduct(ProductModel productModel) {
         Product product = productConverter.convertToEntity(productModel);
         product.setStock(Stock.builder().product(product).build());
+        Optional<ProductType> productType = productTypeRepository.findIdByType(product.getProductType().getType());
+        productType.ifPresent(product::setProductType);
         Product productInserted = productRepository.save(product);
         LOGGER.info("Product: " + productInserted.getName()
                 + " with ID: " + productInserted.getId()

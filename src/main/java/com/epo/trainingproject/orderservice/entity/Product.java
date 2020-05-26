@@ -27,4 +27,7 @@ public class Product {
     private BigDecimal price;
     @OneToOne(mappedBy = "product", cascade = CascadeType.ALL)
     private Stock stock;
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "PRODUCT_TYPE_ID")
+    private ProductType productType;
 }
