@@ -1,6 +1,12 @@
 # Docker configuration
+# This configuration is based on containers running in the same custom network
+# docker network create -d bridge epo-network
+# docker run -itd --name=mysql --network=epo-network --env="MYSQL_ALLOW_EMPTY_PASSWORD=true" --env="MYSQL_DATABASE=orderservice" -p 3306:3306 mysql
+# docker run --name shippingservice -itd --network=epo-network -p 8091:8091 shippingservice
+# docker run --name orderservice -itd --network=epo-network -p 8090:8090 orderservice
+# you may use host.docker.internal as an alternative for dev environment
 service:
-  url: http://host.docker.internal:8091
+  url: http://shippingservice:8091
 spring:
   jpa:
     show-sql: false
@@ -10,10 +16,10 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL5InnoDBDialect
   datasource:
-    url: jdbc:mysql://host.docker.internal:3306/orderservice
-    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://mysql:3306/orderservice
+    driver-class-name: com.mysql.cj.jdbc.Driver
     username: root
-    password: 1234
+    password:
 
 server:
   port: 8090
