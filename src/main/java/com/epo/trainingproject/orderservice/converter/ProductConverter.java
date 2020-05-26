@@ -1,6 +1,7 @@
 package com.epo.trainingproject.orderservice.converter;
 
 import com.epo.trainingproject.orderservice.entity.Product;
+import com.epo.trainingproject.orderservice.entity.Stock;
 import com.epo.trainingproject.orderservice.model.ProductModel;
 import org.springframework.stereotype.Component;
 

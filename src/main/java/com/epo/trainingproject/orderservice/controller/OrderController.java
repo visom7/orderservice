@@ -1,17 +1,18 @@
 package com.epo.trainingproject.orderservice.controller;
 
-import com.epo.trainingproject.orderservice.exception.CommunicationException;
-import com.epo.trainingproject.orderservice.model.ProductOrderModel;
+import com.epo.trainingproject.orderservice.exception.OrderServiceException;
+import com.epo.trainingproject.orderservice.model.OrderModel;
 import com.epo.trainingproject.orderservice.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/order")
@@ -22,16 +23,15 @@ public class OrderController {
     private OrderService orderService;
 
     @PostMapping("/create")
-    public void createOrder(@RequestBody List<ProductOrderModel> productOrderModels) {
+    public ResponseEntity<String> createOrder(@RequestBody List<OrderModel> orderModels) {
         log.info("Order received! -> Products:");
-        productOrderModels.forEach(p -> log.info("*** ID: " + p.getProductId()));
+        orderModels.forEach(p -> log.info("*** ID: " + p.getProductId()));
         try {
-            orderService.makeOrder(productOrderModels);
-        } catch (NoSuchElementException e) {
-            log.error("One of the products in the order does not exist, please try again");
-        } catch (CommunicationException e) {
-            log.error("Error connecting with shipping service, please try again");
+            orderService.makeOrder(orderModels);
+        } catch (OrderServiceException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
+        return new ResponseEntity<>("OK", HttpStatus.CREATED);
     }
 
 }

@@ -1,9 +1,14 @@
 package com.epo.trainingproject.orderservice.service.implementation;
 
 import com.epo.trainingproject.orderservice.converter.ProductConverter;
+import com.epo.trainingproject.orderservice.converter.StockConverter;
 import com.epo.trainingproject.orderservice.entity.Product;
+import com.epo.trainingproject.orderservice.entity.Stock;
+import com.epo.trainingproject.orderservice.exception.OrderServiceException;
 import com.epo.trainingproject.orderservice.model.ProductModel;
+import com.epo.trainingproject.orderservice.model.StockModel;
 import com.epo.trainingproject.orderservice.repository.ProductRepository;
+import com.epo.trainingproject.orderservice.repository.StockRepository;
 import com.epo.trainingproject.orderservice.service.ProductService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -21,62 +26,48 @@ public class ProductServiceImpl implements ProductService {
     @Autowired
     private ProductRepository productRepository;
     @Autowired
-    private ProductConverter converter;
+    private StockRepository stockRepository;
+    @Autowired
+    private ProductConverter productConverter;
+    @Autowired
+    private StockConverter stockConverter;
 
     @Override
     public int checkAvailability(int productId) {
         return productRepository.findById(productId)
-                .map(Product::getQuantity)
+                .map(Product::getStock)
+                .map(Stock::getAmount)
                 .orElseThrow(() -> new NoSuchElementException("No product found"));
     }
 
     @Override
     public ProductModel registerProduct(ProductModel productModel) {
-        Product productInserted = productRepository.save(converter.convertToEntity(productModel));
+        Product product = productConverter.convertToEntity(productModel);
+        product.setStock(Stock.builder().product(product).build());
+        Product productInserted = productRepository.save(product);
         LOGGER.info("Product: " + productInserted.getName()
                 + " with ID: " + productInserted.getId()
                 + ", registered succesfully!");
-        return converter.convertToModel(productInserted);
-    }
-
-    //TODO Realizar control de excepciones a nivel del servicio
-    @Override
-    public ProductModel addStock(int id, int quantity) throws NoSuchElementException {
-        Optional<Product> productOptional = productRepository.findById(id);
-        Product product = productOptional
-                .orElseThrow(() -> new NoSuchElementException("Non existing product"));
-
-        Product updatedProduct = productRepository.save(
-                Product.builder()
-                        .id(id)
-                        .name(product.getName())
-                        .description(product.getDescription())
-                        .price(product.getPrice())
-                        .quantity(product.getQuantity() + quantity)
-                        .build());
-
-        LOGGER.info("Product: " + updatedProduct.getName() + " correctly updated"
-                + " -> Actual stock is " + updatedProduct.getQuantity() + " units");
-        return converter.convertToModel(updatedProduct);
+        return productConverter.convertToModel(productInserted);
     }
 
     @Override
-    public ProductModel decreaseStock(int id, int quantity) {
-        Optional<Product> productOptional = productRepository.findById(id);
-        Product product = productOptional
-                .orElseThrow(() -> new NoSuchElementException("Non existing product"));
+    public StockModel updateStock(int productId, int quantity) throws OrderServiceException {
+        Product product = productRepository.findById(productId).get();
+        Stock stock = product.getStock();
+        stock.setAmount(stock.getAmount() + quantity);
+        Stock updatedStock = stockRepository.save(stock);
+        LOGGER.info("Product: " + updatedStock.getProduct().getName() + " correctly updated"
+                + " -> Actual stock is " + updatedStock.getAmount() + " units");
+        return stockConverter.convertToModel(updatedStock);
 
-        Product updatedProduct = productRepository.save(
-                Product.builder()
-                        .id(id)
-                        .name(product.getName())
-                        .description(product.getDescription())
-                        .price(product.getPrice())
-                        .quantity(product.getQuantity() - quantity)
-                        .build());
-
-        LOGGER.info("Product: " + updatedProduct.getName() + " correctly updated"
-                + " -> Actual stock is " + updatedProduct.getQuantity() + " units");
-        return converter.convertToModel(updatedProduct);
+//        if (productRepository.findById(stockModel.getProductModel().getId()).isPresent()) {
+//            Stock updatedStock = stockRepository.save(stockConverter.convertToEntity(stockModel));
+//            LOGGER.info("Product: " + updatedStock.getProduct().getName() + " correctly updated"
+//                    + " -> Actual stock is " + updatedStock.getAmount() + " units");
+//            return stockConverter.convertToModel(updatedStock);
+//        } else {
+//            throw new OrderServiceException("Non existing productId: " + stockModel.getProductModel().getId(), new NoSuchElementException());
+//        }
     }
 }
