@@ -4,8 +4,6 @@ import com.epo.trainingproject.orderservice.converter.OrderConverter;
 import com.epo.trainingproject.orderservice.entity.Order;
 import com.epo.trainingproject.orderservice.exception.OrderServiceException;
 import com.epo.trainingproject.orderservice.model.OrderModel;
-import com.epo.trainingproject.orderservice.model.ProductModel;
-import com.epo.trainingproject.orderservice.model.StockModel;
 import com.epo.trainingproject.orderservice.repository.OrderRepository;
 import com.epo.trainingproject.orderservice.service.OrderService;
 import com.epo.trainingproject.orderservice.service.ProductService;
@@ -14,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -26,7 +25,10 @@ import java.util.List;
 public class OrderServiceImpl implements OrderService {
 
     private static final int MINUS_ONE = -1;
+    public static final String PROVIDER_REQUEST_TOPIC = "provider-topic";
 
+    @Autowired
+    private KafkaTemplate<String, OrderModel> kafkaTemplate;
     @Autowired
     private OrderConverter orderConverter;
     @Autowired
@@ -57,6 +59,10 @@ public class OrderServiceImpl implements OrderService {
             e.printStackTrace();
             throw new OrderServiceException(e.getMessage(), e.getCause());
         }
+    }
+
+    private void requestForStock(List<OrderModel> orderModelList) {
+        orderModelList.forEach( orderModel -> kafkaTemplate.send(PROVIDER_REQUEST_TOPIC, orderModel));
     }
 
     private void updateStock(OrderModel orderModel, int amount) throws OrderServiceException {
