@@ -1,4 +1,6 @@
 # JPA (JpaBaseConfiguration, HibernateJpaAutoConfiguration)
+service:
+  url: http://localhost:8091
 spring:
   kafka:
     consumer:
