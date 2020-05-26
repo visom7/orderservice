@@ -9,8 +9,10 @@ import com.epo.trainingproject.orderservice.model.StockModel;
 import com.epo.trainingproject.orderservice.repository.OrderRepository;
 import com.epo.trainingproject.orderservice.service.OrderService;
 import com.epo.trainingproject.orderservice.service.ProductService;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -23,9 +25,13 @@ import java.util.List;
 
 @Service
 @Slf4j
+@Setter
+@ConfigurationProperties(prefix = "service")
 public class OrderServiceImpl implements OrderService {
 
     private static final int MINUS_ONE = -1;
+
+    private String url;
 
     @Autowired
     private OrderConverter orderConverter;
@@ -45,7 +51,7 @@ public class OrderServiceImpl implements OrderService {
                 }
             }
             log.info("Enough stock available, sending order to shipping!");
-            httpPostProductOrderModelsTo("http://localhost:8091", "shipping/ship", orderModels);
+            httpPostProductOrderModelsTo(url, "shipping/ship", orderModels);
             List<OrderModel> processedOrders = new ArrayList<>();
             for (OrderModel orderModel : orderModels) {
                 Order processedOrder = orderRepository.save(orderConverter.modelToEntity(orderModel));

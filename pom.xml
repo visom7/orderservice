@@ -65,6 +65,11 @@
             <artifactId>h2</artifactId>
             <version>1.4.199</version>
         </dependency>
+        <!-- Required for connecting with MySQL -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
