@@ -23,11 +23,11 @@ public class OrderController {
     private OrderService orderService;
 
     @PostMapping("/create")
-    public ResponseEntity<String> createOrder(@RequestBody List<OrderModel> orderModels) {
+    public ResponseEntity<String> createOrder(@RequestBody OrderModel orderModel) {
         log.info("Order received! -> Products:");
-        orderModels.forEach(p -> log.info("*** ID: " + p.getProductId()));
+        orderModel.getProductIds().forEach(p -> log.info("*** ID: " + p));
         try {
-            orderService.makeOrder(orderModels);
+            orderService.makeOrder(orderModel);
         } catch (OrderServiceException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }

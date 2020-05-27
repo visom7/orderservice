@@ -1,14 +1,16 @@
 package com.epo.trainingproject.orderservice.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Data
 @Builder
-@JsonIgnoreProperties(ignoreUnknown = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class OrderModel {
-    private int orderId;
-    private int productId;
-    private int amount;
+    private List<Integer> productIds;
 }

@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Objects;
 
 @Data
 @AllArgsConstructor
@@ -30,4 +32,36 @@ public class Product {
     @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "PRODUCT_TYPE_ID")
     private ProductType productType;
+    @ManyToMany(mappedBy = "products")
+    private List<Order> orders;
+
+    @Override
+    public String toString() {
+        return "Product{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", price=" + price +
+                ", stock=" + stock +
+                ", productType=" + productType +
+                ", orders=" + orders +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Product product = (Product) o;
+        return id == product.id &&
+                Objects.equals(name, product.name) &&
+                Objects.equals(description, product.description) &&
+                Objects.equals(price, product.price) &&
+                Objects.equals(productType, product.productType);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, description, price, productType);
+    }
 }

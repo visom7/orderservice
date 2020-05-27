@@ -2,6 +2,7 @@ package com.epo.trainingproject.orderservice.service.implementation;
 
 import com.epo.trainingproject.orderservice.converter.OrderConverter;
 import com.epo.trainingproject.orderservice.entity.Order;
+import com.epo.trainingproject.orderservice.entity.Product;
 import com.epo.trainingproject.orderservice.exception.OrderServiceException;
 import com.epo.trainingproject.orderservice.model.OrderModel;
 import com.epo.trainingproject.orderservice.model.ProductModel;
@@ -25,8 +26,6 @@ import java.util.List;
 @Slf4j
 public class OrderServiceImpl implements OrderService {
 
-    private static final int MINUS_ONE = -1;
-
     @Autowired
     private OrderConverter orderConverter;
     @Autowired
@@ -35,40 +34,37 @@ public class OrderServiceImpl implements OrderService {
     private OrderRepository orderRepository;
 
     @Override
-    public List<OrderModel> makeOrder(List<OrderModel> orderModels) throws OrderServiceException {
+    public OrderModel makeOrder(OrderModel orderModel) throws OrderServiceException {
         try {
-            for (OrderModel orderModel : orderModels) {
-                if (productService.checkAvailability(orderModel.getProductId()) < orderModel.getAmount()) {
-                    log.info("Not enough stock available for productId: " + orderModel.getProductId());
-                    log.info("Calling provider for " + orderModel.getAmount() + " units");
-                    productService.updateStock(orderModel.getProductId(), orderModel.getAmount());
+            for (Integer productId : orderModel.getProductIds()) {
+                if (productService.checkAvailability(productId) < 1) {
+                    log.info("Not enough stock available for productId: " + productId);
+                    log.info("Calling provider for 5 more units");
+                    productService.updateStock(productId, 5);
                 }
             }
             log.info("Enough stock available, sending order to shipping!");
-            httpPostProductOrderModelsTo("http://localhost:8091", "shipping/ship", orderModels);
-            List<OrderModel> processedOrders = new ArrayList<>();
-            for (OrderModel orderModel : orderModels) {
-                Order processedOrder = orderRepository.save(orderConverter.modelToEntity(orderModel));
-                processedOrders.add(orderConverter.entityToModel(processedOrder));
-                productService.updateStock(orderModel.getProductId(), orderModel.getAmount() * MINUS_ONE);
+            httpPostProductOrderModelsTo("http://localhost:8091", "shipping/ship", orderModel);
+            Order storedOrder = orderRepository.save(orderConverter.modelToEntity(orderModel));
+            for (Product product : storedOrder.getProducts()) {
+                productService.updateStock(product.getId(), -1);
             }
-            return processedOrders;
+            return orderConverter.entityToModel(storedOrder);
         } catch (Exception e) {
             e.printStackTrace();
             throw new OrderServiceException(e.getMessage(), e.getCause());
         }
     }
 
-    private void httpPostProductOrderModelsTo(String baseUrl, String endpoint, List<OrderModel> orderModels) {
+    private void httpPostProductOrderModelsTo(String baseUrl, String endpoint, OrderModel orderModel) {
         WebClient client = WebClient.builder().baseUrl(baseUrl).build();
         WebClient.RequestHeadersSpec<?> requestHeadersSpec = client
                 .method(HttpMethod.POST)
                 .uri(endpoint)
                 .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .body(BodyInserters.fromValue(orderModels));
+                .body(BodyInserters.fromValue(orderModel));
         log.info("#### Sending request to " + baseUrl + endpoint);
         String response = requestHeadersSpec.exchange().block().bodyToMono(String.class).block();
         log.info("#### Received response: " + response);
     }
-
 }

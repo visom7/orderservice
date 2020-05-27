@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -17,11 +18,11 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ORDER_ID")
-    private int orderId;
-    @Column(name = "PRODUCT_ID")
-    private int productId;
-    @Column(name = "AMOUNT")
-    private int amount;
-    @Column(name = "CUSTOMER_ID")
-    private int customerId;
+    private int id;
+
+    @JoinTable(name = "REL_ORDER_PRODUCTS",
+    joinColumns = @JoinColumn(name = "FK_ORDER_ID"),
+    inverseJoinColumns = @JoinColumn(name = "FK_PRODUCT_ID"))
+    @ManyToMany(cascade = CascadeType.ALL)
+    private List<Product> products;
 }
