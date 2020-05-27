@@ -6,22 +6,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Entity
-@Table(name = "ORDERS")
-public class Order {
+@Table(name = "PRODUCT_TYPES")
+public class ProductType {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ORDER_ID")
-    private int orderId;
-    @Column(name = "PRODUCT_ID")
-    private int productId;
-    @Column(name = "AMOUNT")
-    private int amount;
-    @Column(name = "CUSTOMER_ID")
-    private int customerId;
+    @Column(name = "ID")
+    private int id;
+    @Column(name = "PRODUCT_TYPE", unique = true)
+    private String type;
 }

@@ -4,6 +4,7 @@ import com.epo.trainingproject.orderservice.exception.OrderServiceException;
 import com.epo.trainingproject.orderservice.model.ProductModel;
 import com.epo.trainingproject.orderservice.model.StockModel;
 import com.epo.trainingproject.orderservice.service.ProductService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,17 +14,15 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/product")
+@Slf4j
 public class ProductController {
-
-    //TODO change to lombok's one
-    private static final Log LOGGER = LogFactory.getLog(ProductController.class);
 
     @Autowired
     private ProductService productService;
 
     @PostMapping("/register")
     public void registerProduct(@RequestBody ProductModel productModel) {
-        LOGGER.info("Product received -> " + productModel);
+        log.info("Product received -> " + productModel);
         productService.registerProduct(productModel);
     }
 
@@ -31,11 +30,11 @@ public class ProductController {
     public ResponseEntity<String> addStock(@RequestParam int productId, @RequestParam int quantity) {
         if (quantity > 0) {
             try {
-                LOGGER.info("Add " + quantity + " units for product id: " + productId);
+                log.info("Add " + quantity + " units for product id: " + productId);
                 productService.updateStock(productId, quantity);
                 return new ResponseEntity<>("OK", HttpStatus.OK);
             } catch (OrderServiceException e) {
-                LOGGER.error("The product with ID " + productId + " does not exist");
+                log.error("The product with ID " + productId + " does not exist");
                 return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
             }
         } else {

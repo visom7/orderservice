@@ -4,6 +4,8 @@ import com.epo.trainingproject.orderservice.converter.OrderConverter;
 import com.epo.trainingproject.orderservice.entity.Order;
 import com.epo.trainingproject.orderservice.exception.OrderServiceException;
 import com.epo.trainingproject.orderservice.model.OrderModel;
+import com.epo.trainingproject.orderservice.model.ProductModel;
+import com.epo.trainingproject.orderservice.model.StockModel;
 import com.epo.trainingproject.orderservice.repository.OrderRepository;
 import com.epo.trainingproject.orderservice.service.OrderService;
 import com.epo.trainingproject.orderservice.service.ProductService;
@@ -49,35 +51,22 @@ public class OrderServiceImpl implements OrderService {
                 if (productService.checkAvailability(orderModel.getProductId()) < orderModel.getAmount()) {
                     log.info("Not enough stock available for productId: " + orderModel.getProductId());
                     log.info("Calling provider for " + orderModel.getAmount() + " units");
-                    updateStock(orderModel, orderModel.getAmount());
+                    productService.updateStock(orderModel.getProductId(), orderModel.getAmount());
                 }
             }
             log.info("Enough stock available, sending order to shipping!");
-            httpPostProductOrderModelsTo(url, "shipping/ship", orderModels);
+            httpPostProductOrderModelsTo("http://localhost:8091", "shipping/ship", orderModels);
             List<OrderModel> processedOrders = new ArrayList<>();
             for (OrderModel orderModel : orderModels) {
                 Order processedOrder = orderRepository.save(orderConverter.modelToEntity(orderModel));
                 processedOrders.add(orderConverter.entityToModel(processedOrder));
-                updateStock(orderModel, orderModel.getAmount() * MINUS_ONE);
+                productService.updateStock(orderModel.getProductId(), orderModel.getAmount() * MINUS_ONE);
             }
             return processedOrders;
         } catch (Exception e) {
             e.printStackTrace();
             throw new OrderServiceException(e.getMessage(), e.getCause());
         }
-    }
-
-    private void requestForStock(List<OrderModel> orderModelList) {
-        orderModelList.forEach( orderModel -> kafkaTemplate.send(PROVIDER_REQUEST_TOPIC, orderModel));
-    }
-
-    private void updateStock(OrderModel orderModel, int amount) throws OrderServiceException {
-//        productService.updateStock(StockModel.builder()
-//                .productModel(ProductModel.builder()
-//                        .id(orderModel.getProductId())
-//                        .build())
-//                .amount(amount)
-//                .build());
     }
 
     private void httpPostProductOrderModelsTo(String baseUrl, String endpoint, List<OrderModel> orderModels) {
