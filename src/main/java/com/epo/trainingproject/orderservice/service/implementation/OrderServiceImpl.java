@@ -1,26 +1,23 @@
 package com.epo.trainingproject.orderservice.service.implementation;
 
+import com.epo.trainingproject.orderservice.clients.ShippingClient;
 import com.epo.trainingproject.orderservice.converter.OrderConverter;
 import com.epo.trainingproject.orderservice.entity.Order;
 import com.epo.trainingproject.orderservice.entity.Product;
 import com.epo.trainingproject.orderservice.exception.OrderServiceException;
 import com.epo.trainingproject.orderservice.model.OrderModel;
-import com.epo.trainingproject.orderservice.model.ProductModel;
-import com.epo.trainingproject.orderservice.model.StockModel;
 import com.epo.trainingproject.orderservice.repository.OrderRepository;
 import com.epo.trainingproject.orderservice.service.OrderService;
 import com.epo.trainingproject.orderservice.service.ProductService;
+import feign.Feign;
+import feign.Logger;
+import feign.gson.GsonDecoder;
+import feign.gson.GsonEncoder;
+import feign.okhttp.OkHttpClient;
+import feign.slf4j.Slf4jLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @Slf4j
@@ -44,7 +41,7 @@ public class OrderServiceImpl implements OrderService {
                 }
             }
             log.info("Enough stock available, sending order to shipping!");
-            httpPostProductOrderModelsTo("http://localhost:8091", "shipping/ship", orderModel);
+            httpPostOrderModelsTo("http://localhost:8091", "/shipping/ship", orderModel);
             Order storedOrder = orderRepository.save(orderConverter.modelToEntity(orderModel));
             for (Product product : storedOrder.getProducts()) {
                 productService.updateStock(product.getId(), -1);
@@ -56,15 +53,15 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private void httpPostProductOrderModelsTo(String baseUrl, String endpoint, OrderModel orderModel) {
-        WebClient client = WebClient.builder().baseUrl(baseUrl).build();
-        WebClient.RequestHeadersSpec<?> requestHeadersSpec = client
-                .method(HttpMethod.POST)
-                .uri(endpoint)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .body(BodyInserters.fromValue(orderModel));
+    private void httpPostOrderModelsTo(String baseUrl, String endpoint, OrderModel orderModel) {
         log.info("#### Sending request to " + baseUrl + endpoint);
-        String response = requestHeadersSpec.exchange().block().bodyToMono(String.class).block();
-        log.info("#### Received response: " + response);
+        ShippingClient shippingClient = Feign.builder()
+                .client(new OkHttpClient())
+                .encoder(new GsonEncoder())
+                .logger(new Slf4jLogger(ShippingClient.class))
+                .logLevel(Logger.Level.FULL)
+                .target(ShippingClient.class, baseUrl + endpoint);
+        String response = shippingClient.shipProduct(orderModel);
+        log.info("#### Received response -> " + response);
     }
 }
