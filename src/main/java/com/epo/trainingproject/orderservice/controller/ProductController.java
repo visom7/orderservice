@@ -2,11 +2,8 @@ package com.epo.trainingproject.orderservice.controller;
 
 import com.epo.trainingproject.orderservice.exception.OrderServiceException;
 import com.epo.trainingproject.orderservice.model.ProductModel;
-import com.epo.trainingproject.orderservice.model.StockModel;
 import com.epo.trainingproject.orderservice.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
