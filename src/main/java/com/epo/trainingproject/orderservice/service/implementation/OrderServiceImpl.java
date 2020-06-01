@@ -5,13 +5,12 @@ import com.epo.trainingproject.orderservice.converter.OrderConverter;
 import com.epo.trainingproject.orderservice.entity.Order;
 import com.epo.trainingproject.orderservice.entity.Product;
 import com.epo.trainingproject.orderservice.exception.OrderServiceException;
-import com.epo.trainingproject.orderservice.model.OrderModel;
+import com.epo.trainingproject.orderservice.model.OrderRequest;
 import com.epo.trainingproject.orderservice.repository.OrderRepository;
 import com.epo.trainingproject.orderservice.service.OrderService;
 import com.epo.trainingproject.orderservice.service.ProductService;
 import feign.Feign;
 import feign.Logger;
-import feign.gson.GsonDecoder;
 import feign.gson.GsonEncoder;
 import feign.okhttp.OkHttpClient;
 import feign.slf4j.Slf4jLogger;
@@ -31,9 +30,9 @@ public class OrderServiceImpl implements OrderService {
     private OrderRepository orderRepository;
 
     @Override
-    public OrderModel makeOrder(OrderModel orderModel) throws OrderServiceException {
+    public OrderRequest makeOrder(OrderRequest orderRequest) throws OrderServiceException {
         try {
-            for (Integer productId : orderModel.getProductIds()) {
+            for (Integer productId : orderRequest.getProductIds()) {
                 if (productService.checkAvailability(productId) < 1) {
                     log.info("Not enough stock available for productId: " + productId);
                     log.info("Calling provider for 5 more units");
@@ -41,8 +40,8 @@ public class OrderServiceImpl implements OrderService {
                 }
             }
             log.info("Enough stock available, sending order to shipping!");
-            httpPostOrderModelsTo("http://localhost:8091", "/shipping/ship", orderModel);
-            Order storedOrder = orderRepository.save(orderConverter.modelToEntity(orderModel));
+            httpPostOrderModelsTo("http://localhost:8091", "/shipping/ship", orderRequest);
+            Order storedOrder = orderRepository.save(orderConverter.modelToEntity(orderRequest));
             for (Product product : storedOrder.getProducts()) {
                 productService.updateStock(product.getId(), -1);
             }
@@ -53,7 +52,7 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private void httpPostOrderModelsTo(String baseUrl, String endpoint, OrderModel orderModel) {
+    private void httpPostOrderModelsTo(String baseUrl, String endpoint, OrderRequest orderRequest) {
         log.info("#### Sending request to " + baseUrl + endpoint);
         ShippingClient shippingClient = Feign.builder()
                 .client(new OkHttpClient())
@@ -61,7 +60,7 @@ public class OrderServiceImpl implements OrderService {
                 .logger(new Slf4jLogger(ShippingClient.class))
                 .logLevel(Logger.Level.FULL)
                 .target(ShippingClient.class, baseUrl + endpoint);
-        String response = shippingClient.shipProduct(orderModel);
+        String response = shippingClient.shipProduct(orderRequest);
         log.info("#### Received response -> " + response);
     }
 }

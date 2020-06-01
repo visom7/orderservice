@@ -2,7 +2,7 @@ package com.epo.trainingproject.orderservice.converter;
 
 import com.epo.trainingproject.orderservice.entity.Order;
 import com.epo.trainingproject.orderservice.entity.Product;
-import com.epo.trainingproject.orderservice.model.OrderModel;
+import com.epo.trainingproject.orderservice.model.OrderRequest;
 import com.epo.trainingproject.orderservice.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -18,9 +18,9 @@ public class OrderConverter {
     @Autowired
     private ProductRepository productRepository;
 
-    public Order modelToEntity(OrderModel orderModel) {
+    public Order modelToEntity(OrderRequest orderRequest) {
         List<Product> products = new ArrayList<>();
-        orderModel.getProductIds()
+        orderRequest.getProductIds()
                 .forEach(p -> products.add(productRepository.findById(p).orElseThrow(() -> new NoSuchElementException("Non existing product")))
         );
         return Order.builder()
@@ -28,8 +28,8 @@ public class OrderConverter {
                 .build();
     }
 
-    public OrderModel entityToModel(Order order) {
-        return OrderModel.builder()
+    public OrderRequest entityToModel(Order order) {
+        return OrderRequest.builder()
                 .productIds(order.getProducts()
                         .stream()
                         .map(Product::getId)

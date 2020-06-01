@@ -11,6 +11,6 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderModel {
+public class OrderRequest {
     private List<Integer> productIds;
 }

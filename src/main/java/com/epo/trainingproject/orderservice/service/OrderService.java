@@ -1,10 +1,8 @@
 package com.epo.trainingproject.orderservice.service;
 
 import com.epo.trainingproject.orderservice.exception.OrderServiceException;
-import com.epo.trainingproject.orderservice.model.OrderModel;
-
-import java.util.List;
+import com.epo.trainingproject.orderservice.model.OrderRequest;
 
 public interface OrderService {
-    OrderModel makeOrder(OrderModel order) throws OrderServiceException;
+    OrderRequest makeOrder(OrderRequest order) throws OrderServiceException;
 }

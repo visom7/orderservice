@@ -1,7 +1,7 @@
 package com.epo.trainingproject.orderservice.controller;
 
 import com.epo.trainingproject.orderservice.exception.OrderServiceException;
-import com.epo.trainingproject.orderservice.model.OrderModel;
+import com.epo.trainingproject.orderservice.model.OrderRequest;
 import com.epo.trainingproject.orderservice.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/order")
 @Slf4j
@@ -23,11 +21,11 @@ public class OrderController {
     private OrderService orderService;
 
     @PostMapping("/create")
-    public ResponseEntity<String> createOrder(@RequestBody OrderModel orderModel) {
+    public ResponseEntity<String> createOrder(@RequestBody OrderRequest orderRequest) {
         log.info("Order received! -> Products:");
-        orderModel.getProductIds().forEach(p -> log.info("*** ID: " + p));
+        orderRequest.getProductIds().forEach(p -> log.info("*** ID: " + p));
         try {
-            orderService.makeOrder(orderModel);
+            orderService.makeOrder(orderRequest);
         } catch (OrderServiceException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
