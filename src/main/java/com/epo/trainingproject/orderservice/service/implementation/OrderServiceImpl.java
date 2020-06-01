@@ -16,7 +16,12 @@ import feign.okhttp.OkHttpClient;
 import feign.slf4j.Slf4jLogger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
 @Slf4j
@@ -40,7 +45,7 @@ public class OrderServiceImpl implements OrderService {
                 }
             }
             log.info("Enough stock available, sending order to shipping!");
-            httpPostOrderModelsTo("http://localhost:8091", "/shipping/ship", orderRequest);
+            httpPostProductOrderModelsTo("http://localhost:8091", "/shipping/ship", orderRequest);
             Order storedOrder = orderRepository.save(orderConverter.modelToEntity(orderRequest));
             for (Product product : storedOrder.getProducts()) {
                 productService.updateStock(product.getId(), -1);
@@ -52,7 +57,7 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private void httpPostOrderModelsTo(String baseUrl, String endpoint, OrderRequest orderRequest) {
+    private void httpPostOrderModelsToUsingFeign(String baseUrl, String endpoint, OrderRequest orderRequest) {
         log.info("#### Sending request to " + baseUrl + endpoint);
         ShippingClient shippingClient = Feign.builder()
                 .client(new OkHttpClient())
@@ -62,5 +67,17 @@ public class OrderServiceImpl implements OrderService {
                 .target(ShippingClient.class, baseUrl + endpoint);
         String response = shippingClient.shipProduct(orderRequest);
         log.info("#### Received response -> " + response);
+    }
+
+    private void httpPostProductOrderModelsTo(String baseUrl, String endpoint, OrderRequest orderRequest) {
+        WebClient client = WebClient.builder().baseUrl(baseUrl).build();
+        WebClient.RequestHeadersSpec<?> requestHeadersSpec = client
+                .method(HttpMethod.POST)
+                .uri(endpoint)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .body(BodyInserters.fromValue(orderRequest));
+        log.info("#### Sending request to " + baseUrl + endpoint);
+        String response = requestHeadersSpec.exchange().block().bodyToMono(String.class).block();
+        log.info("#### Received response: " + response);
     }
 }
